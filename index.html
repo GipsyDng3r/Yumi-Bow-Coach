@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Yumi Coach" />
   <meta name="description" content="Coach IA en tir à l'arc — arc compound, recurve, longbow, kyudo" />
-  <title>Yumi · Coach Tir à l'Arc</title>
+  <title>Yumi · Coach Tir à l'Arc — Mistral AI</title>
 
   <!-- PWA Manifest inline -->
   <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Yumi%20%E2%80%94%20Coach%20Tir%20%C3%A0%20l%27Arc%22%2C%22short_name%22%3A%22Yumi%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230e1a12%22%2C%22theme_color%22%3A%22%230e1a12%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%270%200%20192%20192%2527%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252796%2527%2520fill%3D%2527%25230e1a12%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252770%2527%2520stroke%3D%2527%2523c8a96e%2527%2520stroke-width%3D%25274%2527%2520fill%3D%2527none%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252745%2527%2520stroke%3D%2527%2523c8a96e%2527%2520stroke-width%3D%25274%2527%2520fill%3D%2527none%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252720%2527%2520stroke%3D%2527%2523c8a96e%2527%2520stroke-width%3D%25274%2527%2520fill%3D%2527none%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%25278%2527%2520fill%3D%2527%2523c8a96e%2527%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
@@ -299,16 +299,17 @@
       <p style="font-size:0.72rem;letter-spacing:0.2em;color:rgba(200,169,110,0.5);margin-top:4px;font-family:'Cinzel',serif">COACH IA · TIR À L'ARC</p>
     </div>
 
-    <p>Pour utiliser cette appli, tu as besoin d'une clé API Anthropic.<br>Elle est stockée uniquement sur ton téléphone.</p>
+    <p>Pour utiliser cette appli, tu as besoin d'une clé API Mistral AI.<br>Elle est stockée uniquement sur ton téléphone.</p>
 
-    <input type="password" id="apikey-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" />
+    <input type="password" id="apikey-input" placeholder="Clé API Mistral…" autocomplete="off" spellcheck="false" />
 
     <button class="btn-primary" onclick="saveKey()">Commencer →</button>
 
     <p class="hint">
-      Obtiens ta clé sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
-      (compte gratuit, ~$5 offerts au départ)<br><br>
-      Ta clé n'est jamais envoyée ailleurs qu'à Anthropic.
+      Obtiens ta clé gratuitement sur <a href="https://console.mistral.ai" target="_blank">console.mistral.ai</a><br>
+      ✅ Plan "Expérimentation" — <strong style="color:var(--gold)">100% gratuit</strong><br>
+      Seul un numéro de téléphone est requis (pas de CB)<br><br>
+      Ta clé n'est jamais envoyée ailleurs qu'à Mistral AI.
     </p>
   </div>
 
@@ -415,7 +416,7 @@ window.onload = () => {
 
 function saveKey() {
   const val = document.getElementById('apikey-input').value.trim();
-  if (!val.startsWith('sk-ant')) { showToast('Clé invalide. Elle doit commencer par sk-ant…'); return; }
+  if (val.length < 20) { showToast('Clé invalide. Vérifie ta clé Mistral.'); return; }
   apiKey = val;
   localStorage.setItem('yumi_key', apiKey);
   showMain();
@@ -474,19 +475,19 @@ async function sendMessage() {
   const typingEl = appendTyping();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'mistral-small-latest',
         max_tokens: 1000,
-        system: SYSTEM,
-        messages: history
+        messages: [
+          { role: 'system', content: SYSTEM },
+          ...history
+        ]
       })
     });
 
@@ -497,7 +498,7 @@ async function sendMessage() {
       showToast('Erreur : ' + (data.error.message || 'Réessaie'));
       history.pop();
     } else {
-      const reply = data.content?.map(b => b.text || '').join('') || '…';
+      const reply = data.choices?.[0]?.message?.content || '…';
       appendMsg('assistant', reply);
       history.push({ role: 'assistant', content: reply });
     }
