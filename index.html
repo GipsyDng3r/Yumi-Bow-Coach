@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e1a12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Yumi Coach" />
+  <meta name="description" content="Coach IA en tir à l'arc — arc compound, recurve, longbow, kyudo" />
+  <title>Yumi · Coach Tir à l'Arc</title>
+
+  <!-- PWA Manifest inline -->
+  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Yumi%20%E2%80%94%20Coach%20Tir%20%C3%A0%20l%27Arc%22%2C%22short_name%22%3A%22Yumi%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230e1a12%22%2C%22theme_color%22%3A%22%230e1a12%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%270%200%20192%20192%2527%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252796%2527%2520fill%3D%2527%25230e1a12%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252770%2527%2520stroke%3D%2527%2523c8a96e%2527%2520stroke-width%3D%25274%2527%2520fill%3D%2527none%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252745%2527%2520stroke%3D%2527%2523c8a96e%2527%2520stroke-width%3D%25274%2527%2520fill%3D%2527none%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%252720%2527%2520stroke%3D%2527%2523c8a96e%2527%2520stroke-width%3D%25274%2527%2520fill%3D%2527none%2527%2F%253E%253Ccircle%2520cx%3D%252796%2527%2520cy%3D%252796%2527%2520r%3D%25278%2527%2520fill%3D%2527%2523c8a96e%2527%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --gold: #c8a96e;
+      --gold-dim: rgba(200,169,110,0.18);
+      --gold-faint: rgba(200,169,110,0.07);
+      --bg: #0e1a12;
+      --bg2: #111c14;
+      --text: #e8dcc8;
+      --text-dim: rgba(232,220,200,0.6);
+      --text-faint: rgba(232,220,200,0.35);
+      --border: rgba(200,169,110,0.18);
+      --border-active: rgba(200,169,110,0.55);
+      --radius: 10px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%; height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 16px;
+      overflow: hidden;
+    }
+
+    /* ─── LAYOUT ─── */
+    #app {
+      display: flex; flex-direction: column;
+      height: 100%; height: 100dvh;
+      max-width: 680px; margin: 0 auto;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+      position: relative;
+    }
+
+    /* ─── SETUP SCREEN ─── */
+    #setup {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      flex: 1; padding: 32px 24px;
+      text-align: center; gap: 20px;
+      animation: fadeUp 0.6s ease;
+    }
+    #setup svg { opacity: 0.85; }
+    #setup h1 { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 400; color: var(--gold); letter-spacing: 0.15em; }
+    #setup p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.7; max-width: 340px; }
+    #setup .hint { font-size: 0.78rem; color: var(--text-faint); line-height: 1.6; }
+    #setup a { color: var(--gold); }
+    #apikey-input {
+      width: 100%; max-width: 380px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      outline: none;
+      letter-spacing: 0.04em;
+      transition: border-color 0.2s;
+    }
+    #apikey-input:focus { border-color: var(--border-active); }
+    #apikey-input::placeholder { color: var(--text-faint); font-family: 'Crimson Pro', serif; letter-spacing: 0; }
+    .btn-primary {
+      background: var(--gold-dim);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      border-radius: var(--radius);
+      padding: 13px 32px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .btn-primary:hover, .btn-primary:active { background: rgba(200,169,110,0.28); }
+
+    /* ─── HEADER ─── */
+    #header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #header h1 { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 400; color: var(--gold); letter-spacing: 0.18em; }
+    #header p { font-size: 0.65rem; letter-spacing: 0.2em; color: var(--text-faint); text-transform: uppercase; margin-top: 2px; }
+    #status { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf7d; box-shadow: 0 0 7px #4caf7d; }
+    #status span { font-size: 0.62rem; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+    #reset-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-faint); padding: 6px; border-radius: 6px;
+      font-size: 0.7rem; letter-spacing: 0.1em; font-family: 'Crimson Pro', serif;
+      transition: color 0.2s;
+    }
+    #reset-btn:hover { color: var(--gold); }
+
+    /* ─── MESSAGES ─── */
+    #chat {
+      flex: 1; overflow-y: auto;
+      padding: 12px 14px 8px;
+      display: flex; flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    #chat::-webkit-scrollbar { width: 3px; }
+    #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Welcome */
+    #welcome {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px 8px 16px; text-align: center; gap: 10px;
+      animation: fadeUp 0.5s ease;
+    }
+    #welcome .kanji { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--gold); letter-spacing: 0.1em; }
+    #welcome .sub { font-size: 0.72rem; color: var(--text-faint); letter-spacing: 0.2em; text-transform: uppercase; }
+    #welcome .intro { font-size: 0.9rem; color: var(--text-dim); line-height: 1.75; max-width: 340px; }
+    #suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 6px; }
+    .suggestion {
+      background: var(--gold-faint);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 0.8rem; font-family: 'Crimson Pro', serif;
+      cursor: pointer; transition: all 0.18s;
+      letter-spacing: 0.02em;
+    }
+    .suggestion:active { background: var(--gold-dim); }
+
+    /* Bubbles */
+    .msg { display: flex; gap: 10px; animation: fadeUp 0.25s ease; }
+    .msg.user { flex-direction: row-reverse; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: rgba(200,169,110,0.08);
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 2px;
+    }
+    .bubble {
+      max-width: 82%; padding: 11px 14px;
+      font-size: 0.9rem; line-height: 1.75;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .msg.assistant .bubble {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px 10px 10px 2px;
+      color: #d4c9b5;
+    }
+    .msg.user .bubble {
+      background: var(--gold-faint);
+      border: 1px solid rgba(200,169,110,0.28);
+      border-radius: 10px 10px 2px 10px;
+      color: var(--text);
+    }
+
+    /* Typing */
+    .typing-dots { display: flex; gap: 5px; padding: 14px 16px; }
+    .typing-dots span {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--gold);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ─── QUICK SUGGESTIONS (after start) ─── */
+    #quick-suggestions {
+      display: none; flex-wrap: wrap; gap: 7px;
+      padding: 6px 14px 4px; flex-shrink: 0;
+    }
+    #quick-suggestions.visible { display: flex; }
+    .q-chip {
+      background: rgba(200,169,110,0.05);
+      border: 1px solid rgba(200,169,110,0.15);
+      color: rgba(200,169,110,0.65);
+      border-radius: 5px; padding: 4px 10px;
+      font-size: 0.72rem; font-family: 'Crimson Pro', serif;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    }
+    .q-chip:active { background: var(--gold-dim); color: var(--gold); }
+
+    /* ─── INPUT BAR ─── */
+    #inputbar {
+      padding: 10px 14px 14px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #input-row { display: flex; gap: 10px; align-items: flex-end; }
+    #msg-input {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.92rem;
+      resize: none; outline: none;
+      line-height: 1.55;
+      min-height: 44px; max-height: 110px;
+      transition: border-color 0.2s;
+      -webkit-overflow-scrolling: touch;
+    }
+    #msg-input:focus { border-color: var(--border-active); }
+    #msg-input::placeholder { color: var(--text-faint); font-style: italic; }
+    #send-btn {
+      width: 44px; height: 44px; border-radius: var(--radius); flex-shrink: 0;
+      background: var(--gold-faint);
+      border: 1px solid var(--border);
+      color: var(--text-faint);
+      cursor: not-allowed;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.18s;
+    }
+    #send-btn.active {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold);
+      cursor: pointer;
+    }
+    #send-btn:active.active { background: rgba(200,169,110,0.32); }
+    #hint { font-size: 0.63rem; color: var(--text-faint); text-align: center; margin-top: 7px; letter-spacing: 0.06em; }
+
+    /* ─── BG DECORATION ─── */
+    #bg-deco {
+      position: fixed; inset: 0; pointer-events: none; z-index: -1;
+      background:
+        radial-gradient(ellipse 60% 40% at 15% 20%, rgba(200,169,110,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 85% 80%, rgba(200,169,110,0.03) 0%, transparent 70%);
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+      40%            { opacity: 1;    transform: scale(1.1); }
+    }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(200,80,80,0.9); color: #fff;
+      padding: 10px 18px; border-radius: 8px;
+      font-size: 0.82rem; display: none; z-index: 99;
+      max-width: 300px; text-align: center;
+      animation: fadeUp 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div id="bg-deco"></div>
+<div id="toast"></div>
+
+<div id="app">
+
+  <!-- ══ SETUP SCREEN ══ -->
+  <div id="setup">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+      <circle cx="40" cy="40" r="38" stroke="rgba(200,169,110,0.22)" stroke-width="1.5"/>
+      <circle cx="40" cy="40" r="28" stroke="rgba(200,169,110,0.35)" stroke-width="1.5"/>
+      <circle cx="40" cy="40" r="17" stroke="rgba(200,169,110,0.55)" stroke-width="1.5"/>
+      <circle cx="40" cy="40" r="7"  stroke="#c8a96e" stroke-width="1.5"/>
+      <circle cx="40" cy="40" r="3"  fill="#c8a96e"/>
+      <line x1="70" y1="10" x2="42" y2="38" stroke="#c8a96e" stroke-width="2" stroke-linecap="round"/>
+      <polygon points="70,10 64,15 75,15" fill="#c8a96e" transform="rotate(-45,70,10)"/>
+    </svg>
+
+    <div>
+      <h1>YUMI</h1>
+      <p style="font-size:0.72rem;letter-spacing:0.2em;color:rgba(200,169,110,0.5);margin-top:4px;font-family:'Cinzel',serif">COACH IA · TIR À L'ARC</p>
+    </div>
+
+    <p>Pour utiliser cette appli, tu as besoin d'une clé API Anthropic.<br>Elle est stockée uniquement sur ton téléphone.</p>
+
+    <input type="password" id="apikey-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" />
+
+    <button class="btn-primary" onclick="saveKey()">Commencer →</button>
+
+    <p class="hint">
+      Obtiens ta clé sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      (compte gratuit, ~$5 offerts au départ)<br><br>
+      Ta clé n'est jamais envoyée ailleurs qu'à Anthropic.
+    </p>
+  </div>
+
+  <!-- ══ MAIN SCREEN (hidden until key set) ══ -->
+  <div id="main" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+
+    <!-- Header -->
+    <div id="header">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <circle cx="13" cy="13" r="12" stroke="#c8a96e" stroke-width="1.3"/>
+        <circle cx="13" cy="13" r="8"  stroke="#c8a96e" stroke-width="1.3"/>
+        <circle cx="13" cy="13" r="4"  stroke="#c8a96e" stroke-width="1.3"/>
+        <circle cx="13" cy="13" r="1.5" fill="#c8a96e"/>
+        <line x1="13" y1="1"  x2="13" y2="4"  stroke="#c8a96e" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="13" y1="22" x2="13" y2="25" stroke="#c8a96e" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="1"  y1="13" x2="4"  y2="13" stroke="#c8a96e" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="22" y1="13" x2="25" y2="13" stroke="#c8a96e" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>YUMI</h1>
+        <p>Coach · Tir à l'arc</p>
+      </div>
+      <div id="status">
+        <div class="dot"></div>
+        <span>EN LIGNE</span>
+      </div>
+      <button id="reset-btn" onclick="resetKey()" title="Changer de clé">⚙</button>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat">
+      <div id="welcome">
+        <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
+          <circle cx="35" cy="35" r="33" stroke="rgba(200,169,110,0.2)" stroke-width="1.5"/>
+          <circle cx="35" cy="35" r="24" stroke="rgba(200,169,110,0.32)" stroke-width="1.5"/>
+          <circle cx="35" cy="35" r="15" stroke="rgba(200,169,110,0.5)" stroke-width="1.5"/>
+          <circle cx="35" cy="35" r="6"  stroke="#c8a96e" stroke-width="1.5"/>
+          <circle cx="35" cy="35" r="2.5" fill="#c8a96e"/>
+          <line x1="61" y1="9" x2="37" y2="33" stroke="#c8a96e" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <div class="kanji">一期一会</div>
+        <div class="sub">Ichi-go ichi-e — chaque tir est unique</div>
+        <div class="intro">Bonjour. Je suis Yumi, ton coach en tir à l'arc. Pose-moi ta question ou choisis un thème.</div>
+        <div id="suggestions">
+          <div class="suggestion" onclick="sendSuggestion(this)">Comment améliorer ma posture ?</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Quel arc choisir pour débuter ?</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Corriger mes groupements</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Préparation mentale</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Réglage du viseur</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Avant une compétition</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick chips -->
+    <div id="quick-suggestions">
+      <div class="q-chip" onclick="sendSuggestion(this)">Posture</div>
+      <div class="q-chip" onclick="sendSuggestion(this)">Lâcher</div>
+      <div class="q-chip" onclick="sendSuggestion(this)">Ancrage</div>
+      <div class="q-chip" onclick="sendSuggestion(this)">Back tension</div>
+      <div class="q-chip" onclick="sendSuggestion(this)">Groupements</div>
+    </div>
+
+    <!-- Input bar -->
+    <div id="inputbar">
+      <div id="input-row">
+        <textarea id="msg-input" rows="1" placeholder="Pose ta question à Yumi…" oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
+        <button id="send-btn" onclick="sendMessage()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <line x1="2" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <polyline points="10,4 15,9 10,14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+      </div>
+      <div id="hint">Entrée pour envoyer</div>
+    </div>
+
+  </div><!-- /main -->
+</div>
+
+<script>
+const SYSTEM = `Tu es Yumi, un coach expert en tir à l'arc avec 20 ans d'expérience. Tu maîtrises toutes les disciplines : arc classique (recurve), arc à poulies (compound), arc droit (longbow), et le kyudo japonais.
+
+Tu aides les archers de tous niveaux : débutants, intermédiaires et compétiteurs. Tu peux conseiller sur :
+- La technique de tir (posture, ancrage, visée, lâcher, suivi)
+- Le matériel (choix de l'arc, flèches, accessoires)
+- L'entraînement et la progression
+- La préparation mentale et la concentration
+- Les erreurs courantes et comment les corriger
+- Les règles et formats de compétition
+- La sécurité sur le pas de tir
+
+Tu réponds toujours en français, de manière précise, encourageante et pédagogique. Tu poses des questions de suivi si nécessaire pour mieux cerner le niveau et les besoins de l'archer. Utilise des métaphores liées à la nature et à la sagesse du kyudo quand c'est pertinent. Sois concis mais complet.`;
+
+let history = [];
+let apiKey = '';
+let isLoading = false;
+
+// ── Init ──────────────────────────────────────────
+window.onload = () => {
+  apiKey = localStorage.getItem('yumi_key') || '';
+  if (apiKey) showMain();
+};
+
+function saveKey() {
+  const val = document.getElementById('apikey-input').value.trim();
+  if (!val.startsWith('sk-ant')) { showToast('Clé invalide. Elle doit commencer par sk-ant…'); return; }
+  apiKey = val;
+  localStorage.setItem('yumi_key', apiKey);
+  showMain();
+}
+
+function resetKey() {
+  if (!confirm('Changer de clé API ?')) return;
+  localStorage.removeItem('yumi_key');
+  apiKey = ''; history = [];
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('apikey-input').value = '';
+}
+
+function showMain() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('main').style.display = 'flex';
+  document.getElementById('msg-input').focus();
+}
+
+// ── Input handling ────────────────────────────────
+function onInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+  const btn = document.getElementById('send-btn');
+  btn.classList.toggle('active', el.value.trim().length > 0);
+}
+
+function onKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function sendSuggestion(el) {
+  document.getElementById('msg-input').value = el.textContent;
+  sendMessage();
+}
+
+// ── Send ──────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  // Hide welcome
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.style.display = 'none';
+  document.getElementById('quick-suggestions').classList.add('visible');
+
+  input.value = ''; input.style.height = 'auto';
+  document.getElementById('send-btn').classList.remove('active');
+
+  appendMsg('user', text);
+  history.push({ role: 'user', content: text });
+
+  isLoading = true;
+  const typingEl = appendTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: history
+      })
+    });
+
+    const data = await res.json();
+    typingEl.remove();
+
+    if (data.error) {
+      showToast('Erreur : ' + (data.error.message || 'Réessaie'));
+      history.pop();
+    } else {
+      const reply = data.content?.map(b => b.text || '').join('') || '…';
+      appendMsg('assistant', reply);
+      history.push({ role: 'assistant', content: reply });
+    }
+  } catch (err) {
+    typingEl.remove();
+    showToast('Erreur réseau. Vérifie ta connexion.');
+    history.pop();
+  }
+
+  isLoading = false;
+  input.focus();
+}
+
+// ── DOM helpers ───────────────────────────────────
+function appendMsg(role, text) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.innerHTML = role === 'assistant'
+    ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#c8a96e" stroke-width="1"/><circle cx="8" cy="8" r="4" stroke="#c8a96e" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#c8a96e"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="rgba(200,169,110,0.6)" stroke-width="1.2"/><path d="M2 13c0-3 10-3 10 0" stroke="rgba(200,169,110,0.6)" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+
+  if (role === 'assistant') { div.appendChild(avatar); div.appendChild(bubble); }
+  else { div.appendChild(bubble); div.appendChild(avatar); }
+
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function appendTyping() {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.innerHTML = `
+    <div class="avatar"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#c8a96e" stroke-width="1"/><circle cx="8" cy="8" r="4" stroke="#c8a96e" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#c8a96e"/></svg></div>
+    <div class="bubble" style="padding:0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px 10px 10px 2px;">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ── Service Worker (PWA offline shell) ────────────
+if ('serviceWorker' in navigator) {
+  const sw = `
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+    self.addEventListener('fetch', e => {
+      if (e.request.url.includes('anthropic.com')) return;
+      e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    });
+  `;
+  const blob = new Blob([sw], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(blob));
+}
+</script>
+</body>
+</html>
